@@ -6,10 +6,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import EntryModal from "./EntryModal";
 import SummaryModal from "./SummaryModal";
 import PaymentModal from "./PaymentModal";
-
+import { useNavigate } from "react-router-dom";
 const API_URL = process.env.REACT_APP_API_URL;
 
+
 function Dashboard() {
+    const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [search, setSearch] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -66,6 +68,9 @@ function Dashboard() {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="fw-bold">Customer Dashboard</h2>
+                <button onClick={() => navigate("/next-page")} className="btn btn-secondary me-2">
+                    Go to Next Page
+                </button>
                 <button onClick={() => setShowModal(true)} className="btn btn-primary">
                     + Add Customer
                 </button>
