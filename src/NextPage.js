@@ -1,58 +1,103 @@
-// src/components/NextPage.js
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-import React, { useState } from "react";
+const API_URL = process.env.REACT_APP_API_URL;
 
 function NextPage() {
+  const [vendors, setVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState("");
+  const [invoices, setInvoices] = useState([]);
+  const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
-  const handleCapture = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreview(URL.createObjectURL(file));
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  const fetchVendors = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/invoice/vendors`);
+      setVendors(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleClear = () => setPreview(null);
+  const fetchInvoices = async (vendor) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/invoice/${vendor}`);
+      setInvoices(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleVendorChange = (e) => {
+    const vendor = e.target.value;
+    setSelectedVendor(vendor);
+    fetchInvoices(vendor);
+  };
+
+  const handleCapture = (e) => {
+    const f = e.target.files[0];
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
 
   const handleUpload = async () => {
-    if (!preview) return alert("Please take a photo first!");
+    if (!file) return alert("Select a file first!");
 
-    // You can send the file to your backend here if needed
-    alert("Photo captured successfully!");
+    const formData = new FormData();
+    formData.append("invoice", file);
+
+    try {
+      await axios.post(`${API_URL}/api/invoice/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Invoice uploaded!");
+      setFile(null);
+      setPreview(null);
+      fetchVendors(); // refresh vendor list
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed!");
+    }
   };
 
   return (
     <div className="container py-5">
-      <h2 className="fw-bold mb-4 text-center">Take a Live Photo 📸</h2>
+      <h2 className="text-center mb-4">Invoice Upload & Viewer</h2>
 
-      <div className="card shadow-sm p-4 mx-auto" style={{ maxWidth: "500px" }}>
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"  // ✅ opens camera directly
-          className="form-control mb-3"
-          onChange={handleCapture}
-        />
+      {/* Upload Section */}
+      <div className="card shadow-sm p-4 mb-4" style={{ maxWidth: "500px", margin: "auto" }}>
+        <input type="file" accept="image/*" onChange={handleCapture} className="form-control mb-3" />
+        {preview && <img src={preview} alt="Preview" className="img-fluid mb-3" style={{ maxHeight: "300px" }} />}
+        <button onClick={handleUpload} className="btn btn-primary me-2">Upload</button>
+        <button onClick={() => { setFile(null); setPreview(null); }} className="btn btn-secondary">Clear</button>
+      </div>
 
-        {preview && (
-          <div className="text-center mb-3">
-            <img
-              src={preview}
-              alt="Captured"
-              className="img-fluid rounded"
-              style={{ maxHeight: "300px" }}
-            />
+      {/* Vendor Dropdown */}
+      <div className="mb-3">
+        <label>Select Vendor:</label>
+        <select className="form-select" value={selectedVendor} onChange={handleVendorChange}>
+          <option value="">-- Select Vendor --</option>
+          {vendors.map((v, i) => <option key={i} value={v}>{v}</option>)}
+        </select>
+      </div>
+
+      {/* Display Invoices */}
+      <div className="row">
+        {invoices.map((inv, i) => (
+          <div key={i} className="col-md-4 mb-3">
+            <div className="card shadow-sm h-100">
+              <img src={`data:image/jpeg;base64,${inv.imageData}`} alt={inv.fileName} className="card-img-top" />
+              <div className="card-body">
+                <h6 className="card-title">{inv.fileName}</h6>
+                <p className="card-text text-muted">{new Date(inv.uploadedAt).toLocaleString()}</p>
+              </div>
+            </div>
           </div>
-        )}
-
-        <div className="d-flex justify-content-between">
-          <button onClick={handleClear} className="btn btn-secondary">
-            Retake
-          </button>
-          <button onClick={handleUpload} className="btn btn-primary">
-            Upload
-          </button>
-        </div>
+        ))}
       </div>
     </div>
   );
