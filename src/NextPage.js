@@ -40,6 +40,7 @@ function NextPage() {
 
   const handleCapture = (e) => {
     const f = e.target.files[0];
+    if (!f) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -69,19 +70,58 @@ function NextPage() {
       <h2 className="text-center mb-4">Invoice Upload & Viewer</h2>
 
       {/* Upload Section */}
-      <div className="card shadow-sm p-4 mb-4" style={{ maxWidth: "500px", margin: "auto" }}>
-        <input type="file" accept="image/*" onChange={handleCapture} className="form-control mb-3" />
-        {preview && <img src={preview} alt="Preview" className="img-fluid mb-3" style={{ maxHeight: "300px" }} />}
-        <button onClick={handleUpload} className="btn btn-primary me-2">Upload</button>
-        <button onClick={() => { setFile(null); setPreview(null); }} className="btn btn-secondary">Clear</button>
+      <div
+        className="card shadow-sm p-4 mb-4"
+        style={{ maxWidth: "500px", margin: "auto" }}
+      >
+        <label className="form-label fw-bold mb-2">Capture / Upload Invoice:</label>
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"   // ✅ this opens camera on mobile
+          onChange={handleCapture}
+          className="form-control mb-3"
+        />
+
+        {preview && (
+          <img
+            src={preview}
+            alt="Preview"
+            className="img-fluid mb-3"
+            style={{ maxHeight: "300px", borderRadius: "10px" }}
+          />
+        )}
+
+        <div className="d-flex justify-content-between">
+          <button onClick={handleUpload} className="btn btn-primary">
+            Upload
+          </button>
+          <button
+            onClick={() => {
+              setFile(null);
+              setPreview(null);
+            }}
+            className="btn btn-secondary"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       {/* Vendor Dropdown */}
       <div className="mb-3">
-        <label>Select Vendor:</label>
-        <select className="form-select" value={selectedVendor} onChange={handleVendorChange}>
+        <label className="fw-bold">Select Vendor:</label>
+        <select
+          className="form-select"
+          value={selectedVendor}
+          onChange={handleVendorChange}
+        >
           <option value="">-- Select Vendor --</option>
-          {vendors.map((v, i) => <option key={i} value={v}>{v}</option>)}
+          {vendors.map((v, i) => (
+            <option key={i} value={v}>
+              {v}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -90,10 +130,16 @@ function NextPage() {
         {invoices.map((inv, i) => (
           <div key={i} className="col-md-4 mb-3">
             <div className="card shadow-sm h-100">
-              <img src={`data:image/jpeg;base64,${inv.imageData}`} alt={inv.fileName} className="card-img-top" />
+              <img
+                src={`data:image/jpeg;base64,${inv.imageData}`}
+                alt={inv.fileName}
+                className="card-img-top"
+              />
               <div className="card-body">
                 <h6 className="card-title">{inv.fileName}</h6>
-                <p className="card-text text-muted">{new Date(inv.uploadedAt).toLocaleString()}</p>
+                <p className="card-text text-muted">
+                  {new Date(inv.uploadedAt).toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
