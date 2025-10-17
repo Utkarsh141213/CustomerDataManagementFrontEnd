@@ -59,8 +59,7 @@ function NextPage() {
       alert("Invoice uploaded!");
       setFile(null);
       setPreview(null);
-      fetchVendors();
-      fetchInvoices(selectedVendor); // refresh invoices
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert("Upload failed!");
